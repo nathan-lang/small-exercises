@@ -121,6 +121,7 @@ function LinkedList() {
     return ptr;
   };
   const toString = () => {
+    // In the future, use inheritance here.
     let nums = [];
     let ptr = list;
     while (ptr != null) {
@@ -167,6 +168,97 @@ function LinkedList() {
     }
     return null;
   };
+  const change = (oldVal, newVal) => {
+    let ptr = list;
+    while (ptr != null) {
+      if (ptr.val === oldVal) {
+        ptr.val = newVal;
+        return list;
+      }
+      ptr = ptr.next;
+    }
+    return list;
+  };
+  const addKeyValPair = (key, value) => {
+    // ONLY MUST BE USED FOR KEY-VAL PAIR LISTS ONLY
+    if (
+      !(list != null && list.val.constructor === Array && list.val.length === 2)
+    ) {
+      console.log(
+        "This is not an key-val pair list. Function will not execute."
+      );
+      return list;
+    }
+    let ptr = list;
+    while (ptr != null) {
+      if (ptr.val[0] === key && ptr.val[1] != value) {
+        ptr.val[1] = value;
+        return list;
+      } else if (ptr.val[0] === key && ptr.val[1] === value) {
+        return list;
+      } else if (ptr.next === null && ptr.val[0] != key) {
+        ptr.next = Node([key, value]);
+        size++;
+        return list;
+      }
+      ptr = ptr.next;
+    }
+    return list;
+  };
+  const findKeyValPair = (key) => {
+    // ONLY MUST BE USED FOR KEY-VAL PAIR LISTS ONLY
+    if (
+      !(list != null && list.val.constructor === Array && list.val.length === 2)
+    ) {
+      console.log(
+        "This is not an key-val pair list. Function will not execute."
+      );
+      return list;
+    }
+    let ptr = list;
+    while (ptr != null) {
+      if (ptr.val[0] === key) {
+        return ptr.val;
+      }
+      ptr = ptr.next;
+    }
+    return null;
+  };
+  const removeKeyValPair = (key) => {
+    // ONLY MUST BE USED FOR KEY-VAL PAIR LISTS ONLY
+    if (
+      !(list != null && list.val.constructor === Array && list.val.length === 2)
+    ) {
+      console.log(
+        "This is not an key-val pair list. Function will not execute."
+      );
+      return false;
+    }
+    let ptr = list;
+    if (ptr.val[0] === key) {
+      list = list.next;
+      size--;
+      return true;
+    }
+    while (ptr.next != null) {
+      if (ptr.next.val[0] === key) {
+        ptr.next = ptr.next.next;
+        size--;
+        return true;
+      }
+      ptr = ptr.next;
+    }
+    return false;
+  };
+  const items = () => {
+    let items = [];
+    let ptr = list;
+    while (ptr != null) {
+      items.push(ptr.val);
+      ptr = ptr.next;
+    }
+    return items;
+  };
   return {
     list,
     append,
@@ -179,6 +271,11 @@ function LinkedList() {
     contains,
     find,
     toString,
+    change,
+    addKeyValPair,
+    findKeyValPair,
+    removeKeyValPair,
+    items,
   };
 }
 
@@ -218,3 +315,207 @@ console.log(myList.find(6));
 console.log(myList.find(7));
 console.log(myList.find(9));
 console.log(myList.toString());
+
+let myList2 = LinkedList();
+myList2.append(Node(1));
+myList2.append(Node(4));
+myList2.append(Node(12));
+myList2.append(Node(7));
+myList2.append(Node(9));
+myList2.append(Node(3));
+myList2.prepend(Node(6));
+myList2.prepend(Node(10));
+myList2.prepend(Node(8));
+myList2.pop();
+myList2.pop();
+console.log(myList2.find(10));
+console.log(myList2.toString());
+myList2.change(12, 7);
+console.log(myList2.toString());
+
+// Hash Map (lesson):
+
+/*
+function hash(name, surname) {
+  return name.charAt(0) + surname.charAt(0);
+}
+
+console.log(hash("Carlos", "Smith"));
+
+function stringToNumber(string) {
+  let hashCode = 0;
+  for (let i = 0; i < string.length; i++) {
+    console.log(string.charCodeAt(i));
+    hashCode += string.charCodeAt(i);
+  }
+  return hashCode;
+}
+
+function hashf(name, surname) {
+  return stringToNumber(name) + stringToNumber(surname);
+}
+
+console.log(hashf("Carlos", "Smith"));
+*/
+
+// Project: HashMap
+
+function hash(string) {
+  let hashCode = 0;
+  for (let i = 0; i < string.length; i++) {
+    hashCode += string.charCodeAt(i);
+  }
+  return hashCode;
+}
+
+function HashMap() {
+  map = [];
+  const get = (key) => {
+    hashCode = hash(key);
+    if (hashCode < 0) {
+      console.log("Accessing a negative index. Cannot add.");
+      return;
+    }
+    if (map[hashCode] === undefined || map[hashCode] === null) {
+      return null;
+    }
+    return map[hashCode].findKeyValPair(key);
+  };
+  const set = (key, value) => {
+    hashCode = hash(key);
+    if (hashCode < 0) {
+      console.log("Accessing a negative index. Cannot add.");
+      return;
+    }
+    if (map[hashCode] === undefined) {
+      let list = LinkedList();
+      list.append(Node([key, value]));
+      map[hashCode] = list;
+    } else {
+      map[hashCode].addKeyValPair(key, value);
+    }
+    return map;
+  };
+  const has = (key) => {
+    hashCode = hash(key);
+    if (hashCode < 0) {
+      console.log("Accessing a negative index. Cannot add.");
+      return false;
+    }
+    if (map[hashCode] === undefined || map[hashCode] === null) {
+      return false;
+    }
+    if (map[hashCode].findKeyValPair(key) != null) {
+      return true;
+    }
+    return false;
+  };
+  const remove = (key) => {
+    hashCode = hash(key);
+    if (hashCode < 0) {
+      console.log("Accessing a negative index. Cannot add.");
+      return false;
+    }
+    if (map[hashCode] === undefined || map[hashCode] === null) {
+      return false;
+    }
+    if (map[hashCode].removeKeyValPair(key) === true) {
+      return true;
+    }
+    return false;
+  };
+  const length = () => {
+    let size = 0;
+    for (let i = 0; i < map.length; i++) {
+      if (map[i] != undefined) {
+        size += map[i].getSize();
+      }
+    }
+    return size;
+  };
+  const keys = () => {
+    let keys = [];
+    for (let i = 0; i < map.length; i++) {
+      if (map[i] != undefined) {
+        for (let j = 0; j < map[i].items().length; j++) {
+          keyValPair = map[i].items()[j];
+          keys.push(keyValPair[0]);
+        }
+      }
+    }
+    return keys;
+  };
+  const values = () => {
+    let vals = [];
+    for (let i = 0; i < map.length; i++) {
+      if (map[i] != undefined) {
+        for (let j = 0; j < map[i].items().length; j++) {
+          keyValPair = map[i].items()[j];
+          vals.push(keyValPair[1]);
+        }
+      }
+    }
+    return vals;
+  };
+  const entries = () => {
+    let keyVals = [];
+    for (let i = 0; i < map.length; i++) {
+      if (map[i] != undefined) {
+        for (let j = 0; j < map[i].items().length; j++) {
+          keyValPair = map[i].items()[j];
+          keyVals.push(keyValPair);
+        }
+      }
+    }
+    return keyVals;
+  };
+  const clear = () => {
+    map = [];
+  };
+  return {
+    get,
+    set,
+    has,
+    remove,
+    length,
+    clear,
+    keys,
+    values,
+    entries,
+  };
+}
+
+const hm = new HashMap();
+hm.set("Carlos", 4);
+hm.set("rloCas", 4);
+hm.set("Carlos", 4);
+hm.set("emily", 15);
+hm.set("ilyem", 18);
+hm.set("meily", 22);
+hm.set("miley", 22);
+hm.set("john", 23);
+hm.set("hojn", 18);
+hm.set("Carlos", 5);
+hm.set("njoh", 13);
+hm.set("i love breakfast", 123);
+
+console.log(hm.get("rloCas"));
+console.log(hm.has("miley"));
+console.log(hm.has("emily"));
+console.log(hm.has("emile"));
+
+console.log(hm.remove("john"));
+console.log(hm.remove("john"));
+console.log(hm.remove("john"));
+console.log(hm.remove("miley"));
+console.log(hm.set("miley", 5));
+
+console.log(hm.length());
+
+console.log(hm.length());
+
+console.log(hm.keys());
+console.log(hm.values());
+console.log(hm.entries());
+hm.clear();
+console.log(hm.entries());
