@@ -18,6 +18,15 @@ console.log(fibs(18));
 // Part 2: Merge Sort
 
 function mergeSort(l) {
+  let sorted = true;
+  for (let i = 0; i < l.length - 1; i++) {
+    if (l[i] > l[i + 1]) {
+      sorted = false;
+    }
+  }
+  if (sorted) {
+    return l;
+  }
   let len = l.length;
   if (len == 2) {
     if (l[0] > l[1]) {
@@ -519,3 +528,615 @@ console.log(hm.values());
 console.log(hm.entries());
 hm.clear();
 console.log(hm.entries());
+
+// Project: Binary Search Trees
+function TreeNode(val) {
+  return {
+    left: null,
+    val,
+    right: null,
+  };
+}
+
+function Tree(treeArr) {
+  const prettyPrint = (node, prefix = "", isLeft = true) => {
+    if (node === null) {
+      return;
+    }
+    if (node.right !== null) {
+      prettyPrint(node.right, `${prefix}${isLeft ? "|   " : "   "}`, false);
+    }
+    console.log(`${prefix}${isLeft ? "└── " : "┌── "}${node.val}`);
+    if (node.left !== null) {
+      prettyPrint(node.left, `${prefix}${isLeft ? "    " : "│   "}`, true);
+    }
+  };
+  const buildTree = (arr) => {
+    if (arr.length === 0) {
+      return null;
+    }
+    if (arr.length === 1) {
+      return TreeNode(arr[0]);
+    }
+    arr = mergeSort(arr);
+    let root = TreeNode(arr[Math.floor(arr.length / 2)]);
+
+    let lArr = arr.slice(0, arr.length / 2);
+    let rArr = arr.slice(arr.length / 2 + 1, arr.length);
+
+    root.left = buildTree(lArr);
+    root.right = buildTree(rArr);
+    return root;
+  };
+  const insert = (value) => {
+    if (root === null) {
+      root = TreeNode(value);
+      return root;
+    }
+    let ptr = root;
+    let inserted = false;
+    while (!inserted) {
+      if (ptr.val <= value && ptr.right != null) {
+        ptr = ptr.right;
+      } else if (ptr.left != null) {
+        ptr = ptr.left;
+      }
+      if (ptr.left === null && ptr.val > value) {
+        ptr.left = TreeNode(value);
+        inserted = true;
+      } else if (ptr.right === null && ptr.val <= value) {
+        ptr.right = TreeNode(value);
+        inserted = true;
+      }
+    }
+    return root;
+  };
+  const deleteItem = (value) => {
+    let ptr = root;
+    // Check if the tree is null, or there's one node that contains your value.
+    if (
+      ptr === null ||
+      (ptr.left === null && ptr.right === null && ptr.val === value)
+    ) {
+      root = null;
+      return root;
+    }
+    // Keep looping until you hit null, meaning your value was never found.
+    while (!(ptr.left === null && ptr.right === null)) {
+      if (
+        ptr.left != null &&
+        ptr.left.left === null &&
+        ptr.left.right === null &&
+        ptr.left.val === value
+      ) {
+        ptr.left = null;
+        return root;
+      } else if (
+        ptr.right != null &&
+        ptr.right.left === null &&
+        ptr.right.right === null &&
+        ptr.right.val === value
+      ) {
+        ptr.right = null;
+        return root;
+      }
+      // Go to the node that has the value, and do the appropriate swapping.
+      if (ptr.val < value) {
+        ptr = ptr.right;
+      } else if (ptr.val > value) {
+        ptr = ptr.left;
+      } else {
+        //console.log("value found");
+        let ptrToRemove = ptr;
+        let ptrToSwapWith = null;
+        let leafNodeParent = null; // only used when ptr ends up at a leaf node, we need to know its parent!
+        if (ptr.right != null) {
+          if (ptr.right.left === null && ptr.right.right === null) {
+            leafNodeParent = ptr;
+          }
+          ptr = ptr.right;
+          while (ptr.left != null) {
+            if (ptr.left.left === null && ptr.left.right === null) {
+              leafNodeParent = ptr;
+            }
+            ptr = ptr.left;
+          }
+        } else if (ptr.left != null) {
+          if (ptr.left.left === null && ptr.left.right === null) {
+            leafNodeParent = ptr;
+          }
+          ptr = ptr.left;
+          while (ptr.right != null) {
+            if (ptr.right.left === null && ptr.right.right === null) {
+              leafNodeParent = ptr;
+            }
+            ptr = ptr.right;
+          }
+        }
+        ptrToSwapWith = ptr;
+        //console.log("ptrToRemove:", ptrToRemove);
+        //console.log("ptrToSwapWith:", ptrToSwapWith);
+        let tempVal = ptrToRemove.val;
+        ptrToRemove.val = ptrToSwapWith.val;
+        ptrToSwapWith.val = tempVal;
+        ptrToRemove = ptrToSwapWith;
+
+        // Did the ptrToSwapWith end up as a leaf node?
+        if (leafNodeParent != null) {
+          if (leafNodeParent.left === ptrToSwapWith) {
+            leafNodeParent.left = null;
+          } else if (leafNodeParent.right === ptrToSwapWith) {
+            leafNodeParent.right = null;
+          }
+          return root;
+        }
+
+        // Did the ptrToSwapWith not end up as a leaf node? Sink the node until it's a leaf node, and remove it.
+        while (!(ptrToRemove.left === null && ptrToRemove.right === null)) {
+          if (ptrToRemove.left != null && ptrToRemove.right === null) {
+            ptrToSwapWith = ptrToRemove.left;
+          } else if (ptrToRemove.right != null && ptrToRemove.left === null) {
+            ptrToSwapWith = ptrToRemove.right;
+          } else if (ptrToRemove.left != null && ptrToRemove.right != null) {
+            ptrToSwapWith = ptrToRemove.left;
+          }
+          tempVal = ptrToRemove.val;
+          ptrToRemove.val = ptrToSwapWith.val;
+          ptrToSwapWith.val = tempVal;
+          let tempPtr = ptrToRemove;
+          ptrToRemove = ptrToSwapWith;
+          ptrToSwapWith = tempPtr;
+        }
+        if (ptrToSwapWith.left === ptrToRemove) {
+          ptrToSwapWith.left = null;
+        } else if (ptrToSwapWith.right === ptrToRemove) {
+          ptrToSwapWith.right = null;
+        }
+        return root;
+      }
+    }
+    return root;
+  };
+  const find = (value) => {
+    if (root === null) {
+      return null;
+    }
+    let ptr = root;
+    while (ptr != null) {
+      if (ptr.val < value) {
+        ptr = ptr.right;
+      } else if (ptr.val > value) {
+        ptr = ptr.left;
+      } else if (ptr.val === value) {
+        return ptr;
+      }
+    }
+    return null;
+  };
+  const levelOrder = (callback) => {
+    let queue = [];
+    let order = [];
+    queue.push(root);
+    while (queue.length != 0) {
+      let node = queue.shift();
+      order.push(node.val);
+      if (node.left != null) {
+        queue.push(node.left);
+      }
+      if (node.right != null) {
+        queue.push(node.right);
+      }
+    }
+    return order;
+  };
+  const preOrder = (callback) => {
+    let stack = [];
+    let order = [];
+    stack.push(root);
+    while (stack.length != 0) {
+      let node = stack.pop();
+      order.push(node.val);
+      if (node.right != null) {
+        stack.push(node.right);
+      }
+      if (node.left != null) {
+        stack.push(node.left);
+      }
+    }
+    return order;
+  };
+  const inOrder = (callback) => {
+    let stack = [];
+    let order = [];
+    stack.push(root);
+    let node = stack[stack.length - 1];
+    node = node.left;
+    while (stack.length != 0) {
+      if (node != null) {
+        stack.push(node);
+        node = node.left;
+      } else {
+        node = stack.pop();
+        order.push(node.val);
+        node = node.right;
+        if (node != null) {
+          stack.push(node);
+          node = node.left;
+        }
+      }
+    }
+    return order;
+  };
+
+  const postOrder = (callback) => {
+    // Using 2 stacks is a much better approach!
+    let stack1 = [];
+    let stack2 = [];
+    let order = [];
+    stack1.push(root);
+    while (stack1.length != 0) {
+      transferNode = stack1.pop();
+      stack2.push(transferNode);
+      if (transferNode.left != null) {
+        stack1.push(transferNode.left);
+      }
+      if (transferNode.right != null) {
+        stack1.push(transferNode.right);
+      }
+    }
+    while (stack2.length != 0) {
+      order.push(stack2.pop().val);
+    }
+    return order;
+  };
+
+  const height = (node) => {
+    if (node === null) {
+      return -1;
+    }
+    let queue = [];
+    let heightQueue = [];
+    queue.push(node);
+    heightQueue.push(0);
+    let maxHeight = 0;
+    while (queue.length != 0) {
+      let dequeuedNode = queue.shift();
+      let height = heightQueue.shift();
+      if (height > maxHeight) {
+        maxHeight = height;
+      }
+      if (dequeuedNode.left != null) {
+        queue.push(dequeuedNode.left);
+        heightQueue.push(height + 1);
+      }
+      if (dequeuedNode.right != null) {
+        queue.push(dequeuedNode.right);
+        heightQueue.push(height + 1);
+      }
+    }
+    return maxHeight;
+  };
+
+  const depth = (node) => {
+    let queue = [];
+    let depthQueue = [];
+    queue.push(root);
+    depthQueue.push(0);
+    while (queue.length != 0) {
+      let dequeuedNode = queue.shift();
+      console.log(dequeuedNode);
+      let depth = depthQueue.shift();
+      if (dequeuedNode === node) {
+        return depth;
+      }
+      if (dequeuedNode.left != null) {
+        queue.push(dequeuedNode.left);
+        depthQueue.push(depth + 1);
+      }
+      if (dequeuedNode.right != null) {
+        queue.push(dequeuedNode.right);
+        depthQueue.push(depth + 1);
+      }
+    }
+    return null;
+  };
+
+  const isBalanced = () => {
+    if (root === null) {
+      return true;
+    } else if (root.left === null && root.right === null) {
+      return true;
+    }
+    let queue = [];
+    queue.push(root);
+    while (queue.length != 0) {
+      let dequeuedNode = queue.shift();
+      let heightDiff = Math.abs(
+        height(dequeuedNode.left) - height(dequeuedNode.right)
+      );
+      if (heightDiff > 1) {
+        return false;
+      }
+      if (dequeuedNode.left != null) {
+        queue.push(dequeuedNode.left);
+      }
+      if (dequeuedNode.right != null) {
+        queue.push(dequeuedNode.right);
+      }
+    }
+    return true;
+  };
+
+  const rebalance = () => {
+    let newTreeArr = inOrder();
+    console.log(newTreeArr);
+    root = buildTree(newTreeArr);
+    return root;
+  };
+  let root = buildTree(treeArr);
+  return {
+    get root() {
+      return root;
+    },
+    prettyPrint,
+    insert,
+    deleteItem,
+    find,
+    levelOrder,
+    preOrder,
+    inOrder,
+    postOrder,
+    height,
+    depth,
+    isBalanced,
+    rebalance,
+  };
+}
+
+let myTree2 = Tree([1, 2]);
+console.log(myTree2.deleteItem(2));
+
+let myTree3 = Tree([1, 2, 3]);
+console.log(myTree3.deleteItem(2));
+
+let myTree4 = Tree([1, 7, 4, 23, 8]);
+myTree4.prettyPrint(myTree4.root);
+myTree4.deleteItem(4);
+myTree4.prettyPrint(myTree4.root);
+myTree4.deleteItem(7);
+myTree4.prettyPrint(myTree4.root);
+
+let myTree = Tree([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]);
+console.log(myTree.root);
+myTree.prettyPrint(myTree.root);
+myTree.insert(5);
+myTree.insert(9133);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(4);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(4);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(5);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(5);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(9);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(7);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(9);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(7);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(8);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(67);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(3);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(324);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(6345);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(9133);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(23);
+myTree.prettyPrint(myTree.root);
+myTree.deleteItem(1);
+console.log(myTree.root);
+myTree.prettyPrint(myTree.root);
+myTree.insert(5);
+myTree.prettyPrint(myTree.root);
+myTree.insert(11);
+myTree.prettyPrint(myTree.root);
+console.log(myTree.find(11));
+console.log(myTree.find(5));
+console.log(myTree.find(6));
+myTree.levelOrder(myTree.deleteItem(5));
+
+let myTree5 = Tree([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]);
+console.log(myTree5.levelOrder());
+console.log(myTree5.levelOrder(myTree5.deleteItem(1)));
+console.log(myTree5.preOrder()); // root, left, right
+console.log("inorder:", myTree5.inOrder()); // left, root, right
+console.log(myTree5.postOrder()); // left, right, root
+myTree5.insert(3);
+myTree5.insert(2);
+myTree5.prettyPrint(myTree5.root);
+myTree5.insert(1);
+myTree5.insert(0);
+myTree5.prettyPrint(myTree5.root);
+console.log(myTree5.height(myTree5.find(5)));
+console.log(myTree5.height(myTree5.find(2)));
+console.log(myTree5.height(myTree5.find(3)));
+console.log(myTree5.height(myTree5.find(8)));
+console.log(myTree5.depth(myTree5.find(5)));
+console.log(myTree5.depth(myTree5.find(2)));
+console.log(myTree5.depth(myTree5.find(3)));
+console.log(myTree5.depth(myTree5.find(8)));
+console.log(myTree5.isBalanced());
+myTree5.rebalance();
+console.log(myTree5.isBalanced());
+myTree5.prettyPrint(myTree5.root);
+
+let myTree6 = Tree([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324]);
+console.log(myTree6.isBalanced());
+
+let myTree7 = Tree([1, 7, 4, 23, 8]);
+console.log(myTree7.isBalanced());
+myTree7.insert(0);
+console.log(myTree7.isBalanced());
+myTree7.rebalance();
+console.log(myTree7.isBalanced());
+
+// Project: Knights Travails
+
+let boardRows = 8;
+let boardCols = 8;
+let visited = (n) => {
+  let a = [];
+  for (let i = 0; i < n; i++) {
+    a[i] = [];
+    for (let j = 0; j < n; j++) {
+      a[i][j] = false;
+    }
+  }
+  return a;
+};
+let moves = (n) => {
+  let a = [];
+  for (let i = 0; i < n; i++) {
+    a[i] = [];
+    for (let j = 0; j < n; j++) {
+      a[i][j] = 0;
+    }
+  }
+  return a;
+};
+let previousPosition = (n) => {
+  let a = [];
+  for (let i = 0; i < n; i++) {
+    a[i] = [];
+    for (let j = 0; j < n; j++) {
+      a[i][j] = [];
+    }
+  }
+  return a;
+};
+
+function knightMoves(start, end) {
+  if (
+    !(
+      start.constructor === Array &&
+      start.length === 2 &&
+      end.constructor === Array &&
+      end.length === 2
+    )
+  ) {
+    console.log("Two lists of length 2 were not passed. Exiting.");
+    return null;
+  }
+  let visitedArray = visited(8);
+  let movesArray = moves(8);
+  let previousPositionsArray = previousPosition(8);
+  let queue = [];
+  let movesQueue = [];
+  let previousMovesQueue = [];
+  queue.push([start[0], start[1]]);
+  movesQueue.push(0);
+
+  while (queue.length != 0) {
+    let position = queue.shift();
+    let previousMove = null;
+    if (previousMovesQueue.length != 0) {
+      previousMove = previousMovesQueue.shift();
+    }
+
+    let moves = movesQueue.shift();
+    let x = position[0];
+    let y = position[1];
+    // If it's already visited, skip this position.
+    if (visitedArray[x][y] === true) {
+      continue;
+    }
+
+    let newX1 = x + 2;
+    let newY1 = y + 1;
+    let newY2 = y - 1;
+    let newX2 = x - 2;
+    let newY3 = y + 2;
+    let newX3 = x + 1;
+    let newX4 = x - 1;
+    let newY4 = y - 2;
+
+    if (newX1 >= 0 && newX1 < 8 && newY1 >= 0 && newY1 < 8) {
+      // 1st case:
+      queue.push([newX1, newY1]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newX1 >= 0 && newX1 < 8 && newY2 >= 0 && newY2 < 8) {
+      // 2nd case:
+      queue.push([newX1, newY2]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newX2 >= 0 && newX2 < 8 && newY1 >= 0 && newY1 < 8) {
+      // 3rd case:
+      queue.push([newX2, newY1]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newX2 >= 0 && newX2 < 8 && newY2 >= 0 && newY2 < 8) {
+      // 4th case:
+      queue.push([newX2, newY2]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newY3 >= 0 && newY3 < 8 && newX3 >= 0 && newX3 < 8) {
+      // 5th case:
+      queue.push([newX3, newY3]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newY3 >= 0 && newY3 < 8 && newX4 >= 0 && newX4 < 8) {
+      // 6th case:
+      queue.push([newX4, newY3]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newY4 >= 0 && newY4 < 8 && newX3 >= 0 && newX3 < 8) {
+      // 7th case:
+      queue.push([newX3, newY4]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    if (newY4 >= 0 && newY4 < 8 && newX4 >= 0 && newX4 < 8) {
+      // 8th case:
+      queue.push([newX4, newY4]);
+      previousMovesQueue.push([x, y]);
+      movesQueue.push(moves + 1);
+    }
+    visitedArray[x][y] = true;
+    if (movesArray[x][y] === 0 || moves < movesArray[x][y]) {
+      movesArray[x][y] = moves;
+      if (previousMove != null) {
+        previousPositionsArray[x][y] = previousMove;
+      }
+    }
+  }
+
+  // Retrieving the path using the previous positions array:
+  let path = [];
+  path.unshift(end);
+  let previousPlace = previousPositionsArray[end[0]][end[1]];
+  while (previousPlace.length != 0) {
+    path.unshift(previousPlace);
+    previousPlace = previousPositionsArray[previousPlace[0]][previousPlace[1]];
+  }
+
+  console.log("You made it in", path.length - 1, "moves! Here's your path:");
+  return path;
+}
+
+console.log(knightMoves([3, 3], [4, 3]));
